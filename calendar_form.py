@@ -4,6 +4,37 @@ from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
 
 
+class ChoiceSpinbox(qtw.QSpinBox):
+    """A spinbox for selecting choices."""
+
+    def __init__(self, choices, *args, **kwargs):
+        self.choices = choices
+        super().__init__(
+            *args,
+            maximum=len(self.choices) - 1,
+            minimum=0,
+            **kwargs
+        )
+
+    def valueFromText(self, text):
+        return self.choices.index(text)
+
+    def textFromValue(self, value):
+        try:
+            return self.choices[value]
+        except IndexError:
+            return '!Error!'
+
+    def validate(self, string, index):
+        if string in self.choices:
+            state = qtg.QValidator.Acceptable
+        elif any([v.startswith(string) for v in self.choices]):
+            state = qtg.QValidator.Intermediate
+        else:
+            state = qtg.QValidator.Invalid
+        return state, string, index
+
+
 class MainWindow(qtw.QWidget):
     def __init__(self):
         """MainWindow constructor"""
@@ -11,6 +42,7 @@ class MainWindow(qtw.QWidget):
         # Main UI code goes here
         self.setWindowTitle("My Calendar App")
         self.resize(800, 600)
+
         self.calendar = qtw.QCalendarWidget()
         self.event_list = qtw.QListWidget()
         self.event_title = qtw.QLineEdit()
@@ -20,6 +52,44 @@ class MainWindow(qtw.QWidget):
         self.event_detail = qtw.QTextEdit()
         self.add_button = qtw.QPushButton('Add/Update')
         self.del_button = qtw.QPushButton('Delete')
+
+        # Add event categories
+        self.event_category.addItems(
+            ['Select category', 'New...', 'Work', 'Meeting', 'Doctor', 'Family']
+        )
+        # disable the firt category item
+        self.event_category.model().item(0).setEnabled(False)
+
+        main_layout = qtw.QHBoxLayout()
+        self.setLayout(main_layout)
+        main_layout.addWidget(self.calendar)
+
+        self.calendar.setSizePolicy(
+            qtw.QSizePolicy.Expanding,
+            qtw.QSizePolicy.Expanding
+        )
+
+        right_layout = qtw.QVBoxLayout()
+        main_layout.addLayout(right_layout)
+        right_layout.addWidget(qtw.QLabel('Events on Date'))
+        right_layout.addWidget(self.event_list)
+        self.event_list.setSizePolicy(
+            qtw.QSizePolicy.Expanding,
+            qtw.QSizePolicy.Expanding
+        )
+
+        event_form = qtw.QGroupBox('Event')
+        right_layout.addWidget(event_form)
+        event_form_layout = qtw.QGridLayout()
+        event_form.setLayout(event_form_layout)
+        event_form_layout.addWidget(self.event_title, 1, 1, 1, 3)
+        event_form_layout.addWidget(self.event_category, 2, 1)
+        event_form_layout.addWidget(self.event_time, 2, 2,)
+        event_form_layout.addWidget(self.allday_check, 2, 3)
+        event_form_layout.addWidget(self.event_detail, 3, 1, 1, 3)
+        event_form_layout.addWidget(self.add_button, 4, 2)
+        event_form_layout.addWidget(self.del_button, 4, 3)
+
         # End main UI code
         self.show()
 
