@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 pyqt5 = "*"
+pip-review = "*"
+pyqt5-stubs = "==5.14.2.2"
 
 [dev-packages]
 
